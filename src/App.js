@@ -98,7 +98,9 @@ export default function App() {
   const handleSendTemplateNew = async (phone, templateName) => {
     if (!phone || !templateName)
       return alert("Completa el numero y selecciona una plantilla");
-    await sendTemplate(phone, templateName, "es", []);
+    const tpl = document.getElementById("tplName").value;
+    const lang = templates.find(t => t.name === tpl)?.language || "es_ES";
+    await sendTemplate(phone, tpl, lang, []);
     alert("Plantilla enviada correctamente");
   };
 
