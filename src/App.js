@@ -1,6 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { io } from "socket.io-client";
-import { listChats, listMessages, sendText, sendTemplate } from "./api";
+import {
+  listChats,
+  listMessages,
+  sendText,
+  sendTemplate,
+} from "./api";
 import ChatList from "./components/ChatList";
 import ChatWindow from "./components/ChatWindow";
 import MessageInput from "./components/MessageInput";
@@ -13,6 +18,12 @@ export default function App() {
   const [chats, setChats] = useState([]);
   const [selected, setSelected] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [activePage, setActivePage] = useState("chats"); // chats | plantilla
+  const [templates, setTemplates] = useState([
+    "bienvenida",
+    "oferta_peluqueria",
+    "recordatorio_cita",
+  ]);
 
   const socket = useMemo(() => io(API_URL, { autoConnect: false }), []);
 
@@ -60,6 +71,11 @@ export default function App() {
     setAuthed(true);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("panel_token");
+    window.location.reload();
+  };
+
   const handleSendText = async (text) => {
     if (!selected || !text.trim()) return;
     await sendText(selected, text);
@@ -72,13 +88,20 @@ export default function App() {
     await refreshMessages(selected);
   };
 
-  // Nueva funcion: enviar mensaje a un numero nuevo (chat inexistente)
   const handleSendTextToNew = async (phone, text) => {
     if (!phone || !text) return alert("Completa el numero y el texto");
     await sendText(phone, text);
     await refreshChats();
     setSelected(phone);
+    setActivePage("chats");
     await refreshMessages(phone);
+  };
+
+  const handleSendTemplateNew = async (phone, templateName) => {
+    if (!phone || !templateName)
+      return alert("Completa el numero y selecciona una plantilla");
+    await sendTemplate(phone, templateName, "es", []);
+    alert("Plantilla enviada correctamente");
   };
 
   if (!authed) {
@@ -96,45 +119,135 @@ export default function App() {
 
   return (
     <div className="layout">
-      <aside className="sidebar">
-        <ChatList chats={chats} selected={selected} onSelect={setSelected} />
+      <aside className="sidebar-menu">
+        <h2 className="menu-title">Panel</h2>
+        <button
+          className={`menu-btn ${activePage === "chats" ? "active" : ""}`}
+          onClick={() => setActivePage("chats")}
+        >
+          Chats
+        </button>
+        <button
+          className={`menu-btn ${activePage === "plantilla" ? "active" : ""}`}
+          onClick={() => setActivePage("plantilla")}
+        >
+          Enviar plantilla
+        </button>
+        <button className="menu-btn logout" onClick={handleLogout}>
+          Cerrar sesion
+        </button>
       </aside>
+
       <main className="main">
-        {selected ? (
-          <>
-            <ChatWindow messages={messages} meLabel="Yo" themLabel="Ellos" />
-            <MessageInput onSend={handleSendText} onTemplate={handleSendTemplate} />
-          </>
-        ) : (
-          <div className="new-chat">
-            <h3>Enviar mensaje nuevo</h3>
+        {activePage === "chats" && (
+          <div className="chats-page">
+            <aside className="sidebar">
+              <ChatList
+                chats={chats}
+                selected={selected}
+                onSelect={setSelected}
+              />
+            </aside>
+            <div className="chat-main">
+              {selected ? (
+                <>
+                  <ChatWindow
+                    messages={messages}
+                    meLabel="Yo"
+                    themLabel="Ellos"
+                  />
+                  <MessageInput
+                    onSend={handleSendText}
+                    onTemplate={handleSendTemplate}
+                  />
+                </>
+              ) : (
+                <div className="new-chat">
+                  <h3>Enviar mensaje nuevo</h3>
+                  <input
+                    type="text"
+                    placeholder="Numero (ej. 346XXXXXXXX)"
+                    id="newPhone"
+                    style={{
+                      width: "80%",
+                      padding: "10px",
+                      borderRadius: "8px",
+                      marginBottom: "8px",
+                    }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Mensaje de texto"
+                    id="newText"
+                    style={{
+                      width: "80%",
+                      padding: "10px",
+                      borderRadius: "8px",
+                      marginBottom: "8px",
+                    }}
+                  />
+                  <button
+                    onClick={async () => {
+                      const phone = document
+                        .getElementById("newPhone")
+                        .value.trim();
+                      const text = document
+                        .getElementById("newText")
+                        .value.trim();
+                      await handleSendTextToNew(phone, text);
+                    }}
+                    style={{
+                      padding: "10px 20px",
+                      border: "none",
+                      borderRadius: "8px",
+                      background: "#128c7e",
+                      color: "#fff",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Enviar mensaje
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activePage === "plantilla" && (
+          <div className="plantilla-page">
+            <h2>Enviar plantilla</h2>
             <input
               type="text"
               placeholder="Numero (ej. 346XXXXXXXX)"
-              id="newPhone"
+              id="tplPhone"
               style={{
-                width: "80%",
+                width: "60%",
                 padding: "10px",
                 borderRadius: "8px",
                 marginBottom: "8px",
               }}
             />
-            <input
-              type="text"
-              placeholder="Mensaje de texto"
-              id="newText"
+            <select
+              id="tplName"
               style={{
-                width: "80%",
+                width: "60%",
                 padding: "10px",
                 borderRadius: "8px",
                 marginBottom: "8px",
               }}
-            />
+            >
+              <option value="">Selecciona plantilla</option>
+              {templates.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
             <button
               onClick={async () => {
-                const phone = document.getElementById("newPhone").value.trim();
-                const text = document.getElementById("newText").value.trim();
-                await handleSendTextToNew(phone, text);
+                const phone = document.getElementById("tplPhone").value.trim();
+                const tpl = document.getElementById("tplName").value;
+                await handleSendTemplateNew(phone, tpl);
               }}
               style={{
                 padding: "10px 20px",
@@ -145,7 +258,7 @@ export default function App() {
                 cursor: "pointer",
               }}
             >
-              Enviar mensaje
+              Enviar plantilla
             </button>
           </div>
         )}
