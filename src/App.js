@@ -23,13 +23,16 @@ export default function App() {
       refreshChats();
       if (phone === selected) refreshMessages(phone);
     });
-    return () => { socket.disconnect(); };
+    return () => {
+      socket.disconnect();
+    };
   }, [authed, selected]);
 
   const refreshChats = async () => {
     const data = await listChats();
     setChats(data);
   };
+
   const refreshMessages = async (phone) => {
     const data = await listMessages(phone);
     setMessages(data);
@@ -69,6 +72,15 @@ export default function App() {
     await refreshMessages(selected);
   };
 
+  // Nueva funcion: enviar mensaje a un numero nuevo (chat inexistente)
+  const handleSendTextToNew = async (phone, text) => {
+    if (!phone || !text) return alert("Completa el numero y el texto");
+    await sendText(phone, text);
+    await refreshChats();
+    setSelected(phone);
+    await refreshMessages(phone);
+  };
+
   if (!authed) {
     return (
       <div className="login">
@@ -94,7 +106,48 @@ export default function App() {
             <MessageInput onSend={handleSendText} onTemplate={handleSendTemplate} />
           </>
         ) : (
-          <div className="placeholder">Selecciona un chat</div>
+          <div className="new-chat">
+            <h3>Enviar mensaje nuevo</h3>
+            <input
+              type="text"
+              placeholder="Numero (ej. 346XXXXXXXX)"
+              id="newPhone"
+              style={{
+                width: "80%",
+                padding: "10px",
+                borderRadius: "8px",
+                marginBottom: "8px",
+              }}
+            />
+            <input
+              type="text"
+              placeholder="Mensaje de texto"
+              id="newText"
+              style={{
+                width: "80%",
+                padding: "10px",
+                borderRadius: "8px",
+                marginBottom: "8px",
+              }}
+            />
+            <button
+              onClick={async () => {
+                const phone = document.getElementById("newPhone").value.trim();
+                const text = document.getElementById("newText").value.trim();
+                await handleSendTextToNew(phone, text);
+              }}
+              style={{
+                padding: "10px 20px",
+                border: "none",
+                borderRadius: "8px",
+                background: "#128c7e",
+                color: "#fff",
+                cursor: "pointer",
+              }}
+            >
+              Enviar mensaje
+            </button>
+          </div>
         )}
       </main>
     </div>
