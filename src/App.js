@@ -1,63 +1,102 @@
-import React, { useEffect, useState } from "react";
-import io from "socket.io-client";
-import { getChats, sendMessage, sendTemplate } from "./api";
+import React, { useEffect, useMemo, useState } from "react";
+import { io } from "socket.io-client";
+import { listChats, listMessages, sendText, sendTemplate } from "./api";
 import ChatList from "./components/ChatList";
 import ChatWindow from "./components/ChatWindow";
 import MessageInput from "./components/MessageInput";
 import "./styles.css";
 
-const socket = io(process.env.REACT_APP_API_URL);
+const API_URL = process.env.REACT_APP_API_URL;
 
 export default function App() {
+  const [authed, setAuthed] = useState(!!localStorage.getItem("panel_token"));
   const [chats, setChats] = useState([]);
-  const [selectedChat, setSelectedChat] = useState(null);
+  const [selected, setSelected] = useState(null);
+  const [messages, setMessages] = useState([]);
+
+  const socket = useMemo(() => io(API_URL, { autoConnect: false }), []);
 
   useEffect(() => {
-    loadChats();
-    socket.on("newMessage", (msg) => {
-      setChats((prev) => [...prev, msg]);
+    if (!authed) return;
+    socket.connect();
+    socket.on("message:new", ({ phone }) => {
+      refreshChats();
+      if (phone === selected) refreshMessages(phone);
     });
-  }, []);
+    return () => { socket.disconnect(); };
+  }, [authed, selected]);
 
-  async function loadChats() {
-    const { data } = await getChats();
+  const refreshChats = async () => {
+    const data = await listChats();
     setChats(data);
-  }
+  };
+  const refreshMessages = async (phone) => {
+    const data = await listMessages(phone);
+    setMessages(data);
+  };
 
-  const currentMessages = selectedChat
-    ? chats.filter((m) => m.chat_id === selectedChat)
-    : [];
+  useEffect(() => {
+    if (!authed) return;
+    refreshChats();
+    const int = setInterval(refreshChats, 5000);
+    return () => clearInterval(int);
+  }, [authed]);
 
-  async function handleSend(text) {
-    await sendMessage(selectedChat, text);
-  }
+  useEffect(() => {
+    if (!authed || !selected) return;
+    refreshMessages(selected);
+    const int = setInterval(() => refreshMessages(selected), 4000);
+    return () => clearInterval(int);
+  }, [authed, selected]);
 
-  async function handleTemplate() {
-    const name = prompt("Nombre de la plantilla:");
-    if (!name) return;
-    await sendTemplate(selectedChat, name);
+  const handleLogin = (e) => {
+    e.preventDefault();
+    const token = e.target.token.value.trim();
+    if (!token) return;
+    localStorage.setItem("panel_token", token);
+    setAuthed(true);
+  };
+
+  const handleSendText = async (text) => {
+    if (!selected || !text.trim()) return;
+    await sendText(selected, text);
+    await refreshMessages(selected);
+  };
+
+  const handleSendTemplate = async ({ name, language, components }) => {
+    if (!selected || !name) return;
+    await sendTemplate(selected, name, language, components);
+    await refreshMessages(selected);
+  };
+
+  if (!authed) {
+    return (
+      <div className="login">
+        <form onSubmit={handleLogin} className="login-card">
+          <h2>Entrar</h2>
+          <p>Introduce tu token del panel</p>
+          <input name="token" placeholder="PANEL_TOKEN" />
+          <button type="submit">Acceder</button>
+        </form>
+      </div>
+    );
   }
 
   return (
-    <div className="app">
-      <ChatList
-        chats={chats}
-        selectedChat={selectedChat}
-        onSelect={setSelectedChat}
-      />
-      <div className="chat-container">
-        {selectedChat ? (
+    <div className="layout">
+      <aside className="sidebar">
+        <ChatList chats={chats} selected={selected} onSelect={setSelected} />
+      </aside>
+      <main className="main">
+        {selected ? (
           <>
-            <ChatWindow messages={currentMessages} />
-            <MessageInput
-              onSend={handleSend}
-              onTemplate={handleTemplate}
-            />
+            <ChatWindow messages={messages} meLabel="Yo" themLabel="Ellos" />
+            <MessageInput onSend={handleSendText} onTemplate={handleSendTemplate} />
           </>
         ) : (
           <div className="placeholder">Selecciona un chat</div>
         )}
-      </div>
+      </main>
     </div>
   );
 }

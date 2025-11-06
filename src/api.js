@@ -1,13 +1,20 @@
 import axios from "axios";
 
-const API = axios.create({
-  baseURL: process.env.REACT_APP_API_URL,
+const API_URL = process.env.REACT_APP_API_URL;
+
+const api = axios.create({
+  baseURL: API_URL,
 });
 
-export const sendMessage = (to, text) =>
-  API.post("/send-message", { to, text });
+api.interceptors.request.use((config) => {
+  const t = localStorage.getItem("panel_token");
+  if (t) config.headers["x-api-key"] = t;
+  return config;
+});
 
-export const sendTemplate = (to, templateName, lang = "es") =>
-  API.post("/send-template", { to, templateName, lang });
+export const listChats = () => api.get("/api/chats").then(r => r.data);
+export const listMessages = (phone) => api.get(`/api/messages/${encodeURIComponent(phone)}`).then(r => r.data);
 
-export const getChats = () => API.get("/chats");
+export const sendText = (to, text) => api.post("/api/messages/send", { to, type: "text", text }).then(r => r.data);
+export const sendTemplate = (to, name, language="es", components=[]) =>
+  api.post("/api/messages/send", { to, type: "template", template: { name, language, components } }).then(r => r.data);

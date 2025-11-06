@@ -1,17 +1,15 @@
-import React from "react";
-
-export default function ChatList({ chats, onSelect, selectedChat }) {
-  const unique = [...new Set(chats.map((m) => m.chat_id))];
-
+export default function ChatList({ chats, selected, onSelect }) {
   return (
     <div className="chat-list">
-      {unique.map((id) => (
+      {chats.map((c) => (
         <div
-          key={id}
-          className={`chat-item ${selectedChat === id ? "active" : ""}`}
-          onClick={() => onSelect(id)}
+          key={c.phone}
+          className={`chat-item ${selected === c.phone ? "active" : ""}`}
+          onClick={() => onSelect(c.phone)}
         >
-          {id}
+          <div className="chat-title">{c.name || c.phone}</div>
+          <div className="chat-preview">{c.last_preview || ""}</div>
+          <div className="chat-time">{c.last_timestamp ? new Date(c.last_timestamp*1000).toLocaleString() : ""}</div>
         </div>
       ))}
     </div>

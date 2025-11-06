@@ -1,14 +1,12 @@
-import React from "react";
-
-export default function ChatWindow({ messages }) {
+export default function ChatWindow({ messages, meLabel="Yo", themLabel="Ellos" }) {
   return (
     <div className="chat-window">
-      {messages.map((m, i) => (
-        <div
-          key={i}
-          className={`message ${m.from_me ? "from-me" : "from-them"}`}
-        >
-          {m.text}
+      {messages.map((m) => (
+        <div key={m.id} className={`msg-row ${m.direction === "out" ? "me" : "them"}`}>
+          <div className="bubble">
+            <div className="text">{m.text || (m.template_name ? `Plantilla: ${m.template_name}` : "")}</div>
+            <div className="time">{new Date(m.timestamp*1000).toLocaleString()}</div>
+          </div>
         </div>
       ))}
     </div>
