@@ -18,12 +18,8 @@ export default function App() {
   const [chats, setChats] = useState([]);
   const [selected, setSelected] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [activePage, setActivePage] = useState("chats"); // chats | plantilla
-  const [templates, setTemplates] = useState([
-    "bienvenida",
-    "oferta_peluqueria",
-    "recordatorio_cita",
-  ]);
+  const [activePage, setActivePage] = useState("chats");
+  const [templates, setTemplates] = useState([]);
 
   const socket = useMemo(() => io(API_URL, { autoConnect: false }), []);
 
@@ -119,6 +115,7 @@ export default function App() {
 
   return (
     <div className="layout">
+      {/* Menu lateral fijo */}
       <aside className="sidebar-menu">
         <h2 className="menu-title">Panel</h2>
         <button
@@ -138,17 +135,21 @@ export default function App() {
         </button>
       </aside>
 
+      {/* Contenido principal */}
       <main className="main">
         {activePage === "chats" && (
-          <div className="chats-page">
-            <aside className="sidebar">
+          <div className="chats-layout">
+            {/* Columna de chats */}
+            <div className="chats-column">
               <ChatList
                 chats={chats}
                 selected={selected}
                 onSelect={setSelected}
               />
-            </aside>
-            <div className="chat-main">
+            </div>
+
+            {/* Ventana de conversacion */}
+            <div className="chat-window-container">
               {selected ? (
                 <>
                   <ChatWindow
@@ -162,31 +163,22 @@ export default function App() {
                   />
                 </>
               ) : (
-                <div className="new-chat">
-                  <h3>Enviar mensaje nuevo</h3>
+                <div className="chat-placeholder">
+                  <h3>Selecciona un chat o crea uno nuevo</h3>
                   <input
                     type="text"
                     placeholder="Numero (ej. 346XXXXXXXX)"
                     id="newPhone"
-                    style={{
-                      width: "80%",
-                      padding: "10px",
-                      borderRadius: "8px",
-                      marginBottom: "8px",
-                    }}
+                    className="new-input"
                   />
                   <input
                     type="text"
-                    placeholder="Mensaje de texto"
+                    placeholder="Mensaje inicial"
                     id="newText"
-                    style={{
-                      width: "80%",
-                      padding: "10px",
-                      borderRadius: "8px",
-                      marginBottom: "8px",
-                    }}
+                    className="new-input"
                   />
                   <button
+                    className="new-send-btn"
                     onClick={async () => {
                       const phone = document
                         .getElementById("newPhone")
@@ -195,14 +187,6 @@ export default function App() {
                         .getElementById("newText")
                         .value.trim();
                       await handleSendTextToNew(phone, text);
-                    }}
-                    style={{
-                      padding: "10px 20px",
-                      border: "none",
-                      borderRadius: "8px",
-                      background: "#128c7e",
-                      color: "#fff",
-                      cursor: "pointer",
                     }}
                   >
                     Enviar mensaje
@@ -220,22 +204,9 @@ export default function App() {
               type="text"
               placeholder="Numero (ej. 346XXXXXXXX)"
               id="tplPhone"
-              style={{
-                width: "60%",
-                padding: "10px",
-                borderRadius: "8px",
-                marginBottom: "8px",
-              }}
+              className="new-input"
             />
-            <select
-              id="tplName"
-              style={{
-                width: "60%",
-                padding: "10px",
-                borderRadius: "8px",
-                marginBottom: "8px",
-              }}
-            >
+            <select id="tplName" className="new-input">
               <option value="">Selecciona plantilla</option>
               {templates.map((t) => (
                 <option key={t} value={t}>
@@ -244,18 +215,11 @@ export default function App() {
               ))}
             </select>
             <button
+              className="new-send-btn"
               onClick={async () => {
                 const phone = document.getElementById("tplPhone").value.trim();
                 const tpl = document.getElementById("tplName").value;
                 await handleSendTemplateNew(phone, tpl);
-              }}
-              style={{
-                padding: "10px 20px",
-                border: "none",
-                borderRadius: "8px",
-                background: "#128c7e",
-                color: "#fff",
-                cursor: "pointer",
               }}
             >
               Enviar plantilla
