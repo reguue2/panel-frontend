@@ -24,3 +24,57 @@
 .login-card{background:#fff;padding:24px;border:1px solid #eee;border-radius:12px;display:flex;flex-direction:column;gap:10px;width:320px}
 .login-card input{padding:10px 12px;border:1px solid #ddd;border-radius:8px}
 .login-card button{padding:10px;border:none;border-radius:8px;background:#111;color:#fff;cursor:pointer}
+.sidebar-menu {
+  width: 200px;
+  background: #fff;
+  border-right: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 10px;
+  gap: 12px;
+}
+.menu-title {
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 10px;
+}
+.menu-btn {
+  padding: 10px;
+  border: none;
+  background: #f4f4f4;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.menu-btn.active {
+  background: #128c7e;
+  color: #fff;
+}
+.menu-btn.logout {
+  margin-top: auto;
+  background: #e74c3c;
+  color: #fff;
+}
+.layout {
+  display: flex;
+  height: 100vh;
+}
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.chats-page {
+  display: flex;
+  flex: 1;
+}
+.chat-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.plantilla-page {
+  padding: 40px;
+}
