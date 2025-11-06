@@ -1,11 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { io } from "socket.io-client";
-import {
-  listChats,
-  listMessages,
-  sendText,
-  sendTemplate,
-} from "./api";
+import { listChats, listMessages, sendText, sendTemplate } from "./api";
 import ChatList from "./components/ChatList";
 import ChatWindow from "./components/ChatWindow";
 import MessageInput from "./components/MessageInput";
@@ -32,9 +27,7 @@ export default function App() {
       refreshChats();
       if (phone === selected) refreshMessages(phone);
     });
-    return () => {
-      socket.disconnect();
-    };
+    return () => socket.disconnect();
   }, [authed, selected]);
 
   const refreshChats = async () => {
@@ -61,6 +54,7 @@ export default function App() {
     return () => clearInterval(int);
   }, [authed, selected]);
 
+  // ----------------- LOGIN / LOGOUT -----------------
   const handleLogin = (e) => {
     e.preventDefault();
     const token = e.target.token.value.trim();
@@ -74,6 +68,7 @@ export default function App() {
     window.location.reload();
   };
 
+  // ----------------- ENVÍOS -----------------
   const handleSendText = async (text) => {
     if (!selected || !text.trim()) return;
     await sendText(selected, text);
@@ -95,16 +90,48 @@ export default function App() {
     await refreshMessages(phone);
   };
 
+  // ----------------- ENVÍO DE PLANTILLAS DESDE FORM -----------------
   const handleSendTemplateNew = async (phone, templateName) => {
     if (!phone || !templateName)
       return alert("Completa el numero y selecciona una plantilla");
+
     const tpl = document.getElementById("tplName").value;
-    const lang = templates.find(t => t.name === tpl)?.language || "es_ES";
-    await sendTemplate(phone, tpl, lang, []);
+    const lang = templates.find((t) => t.name === tpl)?.language || "es";
+
+    const headerType = document.getElementById("tplHeaderType").value;
+    const headerUrl = (document.getElementById("tplHeaderUrl").value || "").trim();
+    const bodyVarsRaw = (document.getElementById("tplBodyVars").value || "").trim();
+
+    const components = [];
+
+    // Header (video / imagen / documento)
+    if (headerType !== "none" && headerUrl) {
+      components.push({
+        type: "header",
+        parameters: [
+          {
+            type: headerType,
+            [headerType]: { link: headerUrl },
+          },
+        ],
+      });
+    }
+
+    // Variables body
+    if (bodyVarsRaw.length > 0) {
+      const params = bodyVarsRaw
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .map((txt) => ({ type: "text", text: txt }));
+      if (params.length > 0) components.push({ type: "body", parameters: params });
+    }
+
+    await sendTemplate(phone, tpl, lang, components);
     alert("Plantilla enviada correctamente");
   };
 
-  // Cargar plantillas reales desde el backend
+  // ----------------- CARGAR PLANTILLAS -----------------
   const loadTemplates = async () => {
     setLoadingTemplates(true);
     try {
@@ -127,6 +154,7 @@ export default function App() {
     }
   }, [authed, activePage]);
 
+  // ----------------- LOGIN SCREEN -----------------
   if (!authed) {
     return (
       <div className="login">
@@ -140,9 +168,10 @@ export default function App() {
     );
   }
 
+  // ----------------- MAIN UI -----------------
   return (
     <div className="layout">
-      {/* Menu lateral fijo */}
+      {/* Menú lateral fijo */}
       <aside className="sidebar-menu">
         <h2 className="menu-title">Panel</h2>
         <button
@@ -158,7 +187,7 @@ export default function App() {
           Enviar plantilla
         </button>
         <button className="menu-btn logout" onClick={handleLogout}>
-          Cerrar sesion
+          Cerrar sesión
         </button>
       </aside>
 
@@ -166,27 +195,31 @@ export default function App() {
       <main className="main">
         {activePage === "chats" && (
           <div className="chats-layout">
-            {/* Columna de chats */}
             <div className="chats-column">
-              <ChatList
-                chats={chats}
-                selected={selected}
-                onSelect={setSelected}
-              />
+              <ChatList chats={chats} selected={selected} onSelect={setSelected} />
             </div>
 
-            {/* Ventana de conversacion */}
             <div className="chat-window-container">
               {selected ? (
                 <>
-                  <ChatWindow
-                    messages={messages}
-                    meLabel="Yo"
-                    themLabel="Ellos"
-                  />
+                  <ChatWindow messages={messages} meLabel="Yo" themLabel="Ellos" />
+                  {/* Aquí arreglamos el botón dentro del chat */}
                   <MessageInput
                     onSend={handleSendText}
-                    onTemplate={handleSendTemplate}
+                    onTemplate={async () => {
+                      if (templates.length === 0) await loadTemplates();
+                      const tpl = prompt(
+                        "Escribe el nombre exacto de la plantilla (o deja vacío para cancelar):"
+                      );
+                      if (!tpl) return;
+                      const found = templates.find((t) => t.name === tpl);
+                      if (!found) return alert("Plantilla no encontrada.");
+                      await handleSendTemplate({
+                        name: found.name,
+                        language: found.language,
+                        components: [],
+                      });
+                    }}
                   />
                 </>
               ) : (
@@ -194,7 +227,7 @@ export default function App() {
                   <h3>Selecciona un chat o crea uno nuevo</h3>
                   <input
                     type="text"
-                    placeholder="Numero (ej. 346XXXXXXXX)"
+                    placeholder="Número (ej. 346XXXXXXXX)"
                     id="newPhone"
                     className="new-input"
                   />
@@ -207,12 +240,8 @@ export default function App() {
                   <button
                     className="new-send-btn"
                     onClick={async () => {
-                      const phone = document
-                        .getElementById("newPhone")
-                        .value.trim();
-                      const text = document
-                        .getElementById("newText")
-                        .value.trim();
+                      const phone = document.getElementById("newPhone").value.trim();
+                      const text = document.getElementById("newText").value.trim();
                       await handleSendTextToNew(phone, text);
                     }}
                   >
@@ -224,10 +253,10 @@ export default function App() {
           </div>
         )}
 
+        {/* Pestaña de Enviar plantilla */}
         {activePage === "plantilla" && (
           <div className="plantilla-page">
             <h2>Enviar plantilla</h2>
-
             <button
               className="new-send-btn"
               onClick={loadTemplates}
@@ -241,7 +270,7 @@ export default function App() {
               <>
                 <input
                   type="text"
-                  placeholder="Numero (ej. 346XXXXXXXX)"
+                  placeholder="Número (ej. 346XXXXXXXX)"
                   id="tplPhone"
                   className="new-input"
                 />
@@ -253,12 +282,33 @@ export default function App() {
                     </option>
                   ))}
                 </select>
+
+                {/* Inputs nuevos para headers y variables */}
+                <select id="tplHeaderType" className="new-input">
+                  <option value="none">Sin header</option>
+                  <option value="image">Header: Imagen</option>
+                  <option value="video">Header: Video</option>
+                  <option value="document">Header: Documento</option>
+                </select>
+
+                <input
+                  type="text"
+                  placeholder="URL header (https) si aplica"
+                  id="tplHeaderUrl"
+                  className="new-input"
+                />
+
+                <input
+                  type="text"
+                  placeholder="Variables body separadas por coma (opcional)"
+                  id="tplBodyVars"
+                  className="new-input"
+                />
+
                 <button
                   className="new-send-btn"
                   onClick={async () => {
-                    const phone = document
-                      .getElementById("tplPhone")
-                      .value.trim();
+                    const phone = document.getElementById("tplPhone").value.trim();
                     const tpl = document.getElementById("tplName").value;
                     await handleSendTemplateNew(phone, tpl);
                   }}
