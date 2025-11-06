@@ -9,6 +9,7 @@ import {
 import ChatList from "./components/ChatList";
 import ChatWindow from "./components/ChatWindow";
 import MessageInput from "./components/MessageInput";
+import axios from "axios";
 import "./styles.css";
 
 const API_URL = process.env.REACT_APP_API_URL;
@@ -20,6 +21,7 @@ export default function App() {
   const [messages, setMessages] = useState([]);
   const [activePage, setActivePage] = useState("chats");
   const [templates, setTemplates] = useState([]);
+  const [loadingTemplates, setLoadingTemplates] = useState(false);
 
   const socket = useMemo(() => io(API_URL, { autoConnect: false }), []);
 
@@ -99,6 +101,29 @@ export default function App() {
     await sendTemplate(phone, templateName, "es", []);
     alert("Plantilla enviada correctamente");
   };
+
+  // Cargar plantillas reales desde el backend
+  const loadTemplates = async () => {
+    setLoadingTemplates(true);
+    try {
+      const panelToken = localStorage.getItem("panel_token");
+      const res = await axios.get(`${API_URL}/api/templates`, {
+        headers: { "x-api-key": panelToken },
+      });
+      setTemplates(res.data || []);
+    } catch (e) {
+      console.error("Error cargando plantillas", e);
+      alert("No se pudieron cargar las plantillas. Revisa el backend o tu token.");
+    } finally {
+      setLoadingTemplates(false);
+    }
+  };
+
+  useEffect(() => {
+    if (authed && activePage === "plantilla" && templates.length === 0) {
+      loadTemplates();
+    }
+  }, [authed, activePage]);
 
   if (!authed) {
     return (
@@ -200,30 +225,48 @@ export default function App() {
         {activePage === "plantilla" && (
           <div className="plantilla-page">
             <h2>Enviar plantilla</h2>
-            <input
-              type="text"
-              placeholder="Numero (ej. 346XXXXXXXX)"
-              id="tplPhone"
-              className="new-input"
-            />
-            <select id="tplName" className="new-input">
-              <option value="">Selecciona plantilla</option>
-              {templates.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
+
             <button
               className="new-send-btn"
-              onClick={async () => {
-                const phone = document.getElementById("tplPhone").value.trim();
-                const tpl = document.getElementById("tplName").value;
-                await handleSendTemplateNew(phone, tpl);
-              }}
+              onClick={loadTemplates}
+              style={{ width: "200px", marginBottom: "15px" }}
+              disabled={loadingTemplates}
             >
-              Enviar plantilla
+              {loadingTemplates ? "Cargando..." : "Refrescar plantillas"}
             </button>
+
+            {templates.length > 0 ? (
+              <>
+                <input
+                  type="text"
+                  placeholder="Numero (ej. 346XXXXXXXX)"
+                  id="tplPhone"
+                  className="new-input"
+                />
+                <select id="tplName" className="new-input">
+                  <option value="">Selecciona plantilla</option>
+                  {templates.map((t) => (
+                    <option key={t.name} value={t.name}>
+                      {t.name} ({t.language})
+                    </option>
+                  ))}
+                </select>
+                <button
+                  className="new-send-btn"
+                  onClick={async () => {
+                    const phone = document
+                      .getElementById("tplPhone")
+                      .value.trim();
+                    const tpl = document.getElementById("tplName").value;
+                    await handleSendTemplateNew(phone, tpl);
+                  }}
+                >
+                  Enviar plantilla
+                </button>
+              </>
+            ) : (
+              <p>No hay plantillas cargadas</p>
+            )}
           </div>
         )}
       </main>
