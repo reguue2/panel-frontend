@@ -206,8 +206,9 @@ export default function App() {
                   {/* Aquí arreglamos el botón dentro del chat */}
                   <MessageInput
                     onSend={handleSendText}
-                    onTemplate={handleSendTemplate}
+                    currentChat={selectedChat}
                   />
+
                 </>
               ) : (
                 <div className="chat-placeholder">
