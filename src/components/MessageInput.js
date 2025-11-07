@@ -1,4 +1,5 @@
 import { useState } from "react";
+import "../styles.css"; 
 
 export default function MessageInput({ onSend, onOpenTemplates }) {
   const [text, setText] = useState("");
@@ -11,17 +12,21 @@ export default function MessageInput({ onSend, onOpenTemplates }) {
   };
 
   return (
-    <div style={{ display: "flex", gap: "6px" }}>
+    <div className="message-input-container">
       <input
         type="text"
+        className="message-input-field"
         placeholder="Escribe un mensaje..."
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && handleSend()}
-        style={{ flex: 1 }}
       />
-      <button onClick={handleSend}>Enviar</button>
-      <button onClick={onOpenTemplates}>Plantilla</button>
+      <button className="message-button send-button" onClick={handleSend}>
+        Enviar
+      </button>
+      <button className="message-button template-button" onClick={onOpenTemplates}>
+        Plantilla
+      </button>
     </div>
   );
 }
