@@ -1,21 +1,51 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { listTemplates } from "../api";
 
 export default function MessageInput({ onSend, onTemplate }) {
   const [text, setText] = useState("");
   const [tplOpen, setTplOpen] = useState(false);
-  const [tplName, setTplName] = useState("");
-  const [tplLang, setTplLang] = useState("es");
+  const [templates, setTemplates] = useState([]);
+  const [loadingTpls, setLoadingTpls] = useState(false);
+  const [selectedIdx, setSelectedIdx] = useState(-1);
 
   const send = async () => {
-    if (!text.trim()) return;
-    await onSend(text.trim());
+    const t = text.trim();
+    if (!t) return;
+    await onSend(t);
     setText("");
   };
 
+  const toggleTemplates = () => {
+    setTplOpen(s => !s);
+  };
+
+  useEffect(() => {
+    const fetchTpls = async () => {
+      try {
+        setLoadingTpls(true);
+        const tpls = await listTemplates();
+        setTemplates(tpls || []);
+        if ((tpls || []).length > 0) setSelectedIdx(0);
+      } catch (e) {
+        console.error(e);
+        setTemplates([]);
+      } finally {
+        setLoadingTpls(false);
+      }
+    };
+    if (tplOpen && templates.length === 0) fetchTpls();
+    // solo cuando se abre
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tplOpen]);
+
   const sendTpl = async () => {
-    if (!tplName.trim()) return;
-    await onTemplate({ name: tplName.trim(), language: tplLang, components: [] });
-    setTplName("");
+    if (selectedIdx < 0 || selectedIdx >= templates.length) return;
+    const chosen = templates[selectedIdx];
+    await onTemplate({
+      name: chosen.name,
+      language: chosen.language || "es",
+      components: [],
+    });
     setTplOpen(false);
   };
 
@@ -23,18 +53,35 @@ export default function MessageInput({ onSend, onTemplate }) {
     <div className="message-input">
       <input
         type="text"
-        value={text}
         placeholder="Escribe un mensaje..."
+        value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && send()}
       />
       <button onClick={send}>Enviar</button>
-      <button onClick={() => setTplOpen(s => !s)}>Plantilla</button>
+      <button onClick={toggleTemplates}>Plantilla</button>
+
       {tplOpen && (
         <div className="template-panel">
-          <input placeholder="Nombre de plantilla" value={tplName} onChange={(e)=>setTplName(e.target.value)} />
-          <input placeholder="Idioma (es)" value={tplLang} onChange={(e)=>setTplLang(e.target.value)} />
-          <button onClick={sendTpl}>Enviar plantilla</button>
+          {loadingTpls ? (
+            <div>Cargando plantillas...</div>
+          ) : templates.length === 0 ? (
+            <div>No hay plantillas</div>
+          ) : (
+            <>
+              <select
+                value={selectedIdx}
+                onChange={(e) => setSelectedIdx(parseInt(e.target.value, 10))}
+              >
+                {templates.map((t, idx) => (
+                  <option key={`${t.name}-${idx}`} value={idx}>
+                    {t.name} ({t.language})
+                  </option>
+                ))}
+              </select>
+              <button onClick={sendTpl}>Enviar plantilla</button>
+            </>
+          )}
         </div>
       )}
     </div>
