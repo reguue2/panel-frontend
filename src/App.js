@@ -17,6 +17,7 @@ export default function App() {
   const [activePage, setActivePage] = useState("chats");
   const [templates, setTemplates] = useState([]);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
+  const [pendingTplPhone, setPendingTplPhone] = useState(null);
 
   const socket = useMemo(() => io(API_URL, { autoConnect: false }), []);
 
@@ -54,6 +55,15 @@ export default function App() {
     return () => clearInterval(int);
   }, [authed, selected]);
 
+  useEffect(() => {
+    if (activePage === "plantilla" && pendingTplPhone) {
+      // damos un tick para asegurar que el DOM del formulario ya esta pintado
+      setTimeout(() => {
+        const input = document.getElementById("tplPhone");
+        if (input) input.value = pendingTplPhone;
+      }, 0);
+    }
+  }, [activePage, pendingTplPhone]);
   // ----------------- LOGIN / LOGOUT -----------------
   const handleLogin = (e) => {
     e.preventDefault();
@@ -88,6 +98,14 @@ export default function App() {
     setSelected(phone);
     setActivePage("chats");
     await refreshMessages(phone);
+  };
+  const handleOpenTemplates = () => {
+    if (!selected) {
+      alert("Selecciona primero un chat");
+      return;
+    }
+    setPendingTplPhone(selected); 
+    setActivePage("plantilla");   
   };
 
   // ----------------- ENVÍO DE PLANTILLAS DESDE FORM -----------------
@@ -206,7 +224,7 @@ export default function App() {
                   {/* Aquí arreglamos el botón dentro del chat */}
                   <MessageInput
                     onSend={handleSendText}
-                    currentChat={selectedChat}
+                    onOpenTemplates={handleOpenTemplates}
                   />
 
                 </>
