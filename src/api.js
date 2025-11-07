@@ -15,6 +15,14 @@ api.interceptors.request.use((config) => {
 export const listChats = () => api.get("/api/chats").then(r => r.data);
 export const listMessages = (phone) => api.get(`/api/messages/${encodeURIComponent(phone)}`).then(r => r.data);
 
-export const sendText = (to, text) => api.post("/api/messages/send", { to, type: "text", text }).then(r => r.data);
+export const sendText = (to, text) =>
+  api.post("/api/messages/send", { to, type: "text", text }).then(r => r.data);
+
 export const sendTemplate = (to, name, language="es", components=[]) =>
-  api.post("/api/messages/send", { to, type: "template", template: { name, language, components } }).then(r => r.data);
+  api.post("/api/messages/send", {
+    to,
+    type: "template",
+    template: { name, language, components }
+  }).then(r => r.data);
+
+export const listTemplates = () => api.get("/api/templates").then(r => r.data);
