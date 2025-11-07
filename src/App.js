@@ -206,20 +206,7 @@ export default function App() {
                   {/* Aquí arreglamos el botón dentro del chat */}
                   <MessageInput
                     onSend={handleSendText}
-                    onTemplate={async () => {
-                      if (templates.length === 0) await loadTemplates();
-                      const tpl = prompt(
-                        "Escribe el nombre exacto de la plantilla (o deja vacío para cancelar):"
-                      );
-                      if (!tpl) return;
-                      const found = templates.find((t) => t.name === tpl);
-                      if (!found) return alert("Plantilla no encontrada.");
-                      await handleSendTemplate({
-                        name: found.name,
-                        language: found.language,
-                        components: [],
-                      });
-                    }}
+                    onTemplate={handleSendTemplate}
                   />
                 </>
               ) : (
