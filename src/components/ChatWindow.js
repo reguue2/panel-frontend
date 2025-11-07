@@ -7,25 +7,19 @@ export default function ChatWindow({ messages, meLabel = "Yo", themLabel = "Ello
           className={`msg-row ${m.direction === "out" ? "me" : "them"}`}
         >
           <div className="bubble">
-            {/* Mostrar audio si el mensaje es de tipo "audio" */}
             {m.type === "audio" && m.media_url ? (
               <audio
                 controls
-                preload="none"
-                style={{
-                  width: "100%",
-                  borderRadius: "8px",
-                  outline: "none",
-                  backgroundColor: "#f5f5f5",
+                preload="metadata"
+                style={{ width: "100%" }}
+                src={m.media_url}
+                onError={(e) => {
+                  console.warn("Fallo al cargar audio:", m.media_url, e?.target?.error);
                 }}
-              >
-                <source src={m.media_url} type="audio/ogg" />
-                Tu navegador no soporta el elemento de audio.
-              </audio>
+              />
             ) : (
               <div className="text">
-                {m.text ||
-                  (m.template_name ? `Plantilla: ${m.template_name}` : "")}
+                {m.text || (m.template_name ? `Plantilla: ${m.template_name}` : "")}
               </div>
             )}
             <div className="time">
