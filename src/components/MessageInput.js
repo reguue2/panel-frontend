@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export default function MessageInput({ onSend, currentChat }) {
+export default function MessageInput({ onSend, onOpenTemplates }) {
   const [text, setText] = useState("");
 
   const handleSend = async () => {
@@ -8,16 +8,6 @@ export default function MessageInput({ onSend, currentChat }) {
     if (!t) return;
     await onSend(t);
     setText("");
-  };
-
-  const handleGoToTemplates = () => {
-    // Redirige a la página de plantillas con el número actual
-    if (!currentChat?.phone) {
-      alert("No hay un número seleccionado en el chat.");
-      return;
-    }
-    const phone = encodeURIComponent(currentChat.phone);
-    window.location.href = `/templates?number=${phone}`;
   };
 
   return (
@@ -31,7 +21,7 @@ export default function MessageInput({ onSend, currentChat }) {
         style={{ flex: 1 }}
       />
       <button onClick={handleSend}>Enviar</button>
-      <button onClick={handleGoToTemplates}>Plantilla</button>
+      <button onClick={onOpenTemplates}>Plantilla</button>
     </div>
   );
 }
