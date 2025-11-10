@@ -297,3 +297,127 @@
   background: rgba(0,0,0,0.04);
 }
 
+/* ============================= */
+/*       RESPONSIVE GENERAL      */
+/* ============================= */
+
+/* Para tablets y pantallas medianas */
+@media (max-width: 992px) {
+  .layout,
+  .chats-layout {
+    flex-direction: column;
+  }
+
+  .sidebar-menu {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #ddd;
+    flex-direction: row;
+    justify-content: space-around;
+    padding: 10px 0;
+  }
+
+  .menu-btn {
+    flex: 1;
+    font-size: 14px;
+    padding: 8px 6px;
+  }
+
+  .chats-column {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #ddd;
+    height: auto;
+    max-height: 50vh;
+  }
+
+  .chat-window-container {
+    height: auto;
+    flex: 1;
+  }
+
+  .message-input-container {
+    flex-wrap: wrap;
+  }
+
+  .message-input-field {
+    flex: 1 1 100%;
+    font-size: 15px;
+    margin-bottom: 6px;
+  }
+
+  .message-button {
+    flex: 1 1 48%;
+    font-size: 14px;
+  }
+
+  .bubble {
+    max-width: 80%;
+  }
+}
+
+/* Para móviles pequeños */
+@media (max-width: 600px) {
+  .layout {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .sidebar-menu {
+    display: none; /* Ocultar menú lateral si molesta */
+  }
+
+  .chats-layout {
+    flex-direction: column;
+  }
+
+  .chats-column {
+    width: 100%;
+    border-right: none;
+    height: auto;
+    max-height: 45vh;
+    overflow-y: auto;
+  }
+
+  .chat-window-container {
+    flex: 1;
+    height: calc(100vh - 280px);
+    overflow-y: auto;
+  }
+
+  .message-input-container {
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px;
+  }
+
+  .message-input-field {
+    width: 100%;
+    font-size: 16px;
+    padding: 10px;
+  }
+
+  .message-button {
+    width: 100%;
+    font-size: 15px;
+    padding: 10px;
+  }
+
+  .bubble {
+    max-width: 90%;
+    font-size: 15px;
+  }
+
+  .chat-item {
+    font-size: 15px;
+    padding: 10px 12px;
+  }
+
+  .chat-preview {
+    display: none; /* Para ahorrar espacio */
+  }
+
+  .chat-time {
+    font-size: 10px;
+  }
+}
