@@ -1,14 +1,12 @@
-import React from "react";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import api from "../api";
 
-export default function ChatWindow({ phone, messages }) {
+export default function ChatWindow({ phone, messages, meLabel = "Yo", themLabel = "Ellos" }) {
   useEffect(() => {
     if (!phone) return;
     api.patch(`/chats/${phone}/read`).catch(() => {});
   }, [phone]);
 
-export default function ChatWindow({ messages, meLabel = "Yo", themLabel = "Ellos" }) {
   return (
     <div className="chat-window">
       {messages.map((m) => (
@@ -28,9 +26,11 @@ export default function ChatWindow({ messages, meLabel = "Yo", themLabel = "Ello
                   backgroundColor: "#f9f9f9",
                   borderRadius: "8px",
                 }}
-                src={m.media_url.startsWith("http")
-                  ? m.media_url
-                  : `${process.env.REACT_APP_API_URL}${m.media_url}`}
+                src={
+                  m.media_url.startsWith("http")
+                    ? m.media_url
+                    : `${process.env.REACT_APP_API_URL}${m.media_url}`
+                }
                 onError={(e) => {
                   console.warn("Error cargando audio:", m.media_url, e);
                   e.target.outerHTML =
