@@ -26,8 +26,7 @@ export default function ChatWindow({ phone, messages, meLabel = "Yo", themLabel 
         height: "100%",
         overflowY: "auto",
         display: "flex",
-        flexDirection: "column",
-        backgroundColor: "#fff",
+        flexDirection: "column"
       }}
     >
       {messages && messages.length > 0 ? (
