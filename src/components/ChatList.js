@@ -2,29 +2,60 @@ import React, { useState } from "react";
 import "./ChatList.css";
 
 export default function ChatList({ chats, selected, onSelect }) {
-  const [filter, setFilter] = useState("unread");
+  const [filter, setFilter] = useState("all");
 
-  const filteredChats = chats.filter(c =>
-    filter === "unread" ? c.has_unread : !c.has_unread
-  );
+  const filteredChats =
+    filter === "all"
+      ? chats
+      : chats.filter((c) =>
+          filter === "unread" ? c.has_unread : !c.has_unread
+        );
+
 
   return (
     <div className="chat-list-container">
-      <div className="chat-filters">
+      <div className="chat-filters" style={{ display: "flex", marginBottom: "10px" }}>
         <button
-          className={filter === "unread" ? "active" : ""}
           onClick={() => setFilter("unread")}
+          style={{
+            flex: 1,
+            backgroundColor: filter === "unread" ? "#007bff" : "#eee",
+            color: filter === "unread" ? "white" : "black",
+            border: "none",
+            padding: "8px",
+            cursor: "pointer",
+          }}
         >
           No leídos
         </button>
         <button
-          className={filter === "read" ? "active" : ""}
           onClick={() => setFilter("read")}
+          style={{
+            flex: 1,
+            backgroundColor: filter === "read" ? "#007bff" : "#eee",
+            color: filter === "read" ? "white" : "black",
+            border: "none",
+            padding: "8px",
+            cursor: "pointer",
+          }}
         >
           Leídos
         </button>
+        <button
+          onClick={() => setFilter("all")}
+          style={{
+            flex: 1,
+            backgroundColor: filter === "all" ? "#007bff" : "#eee",
+            color: filter === "all" ? "white" : "black",
+            border: "none",
+            padding: "8px",
+            cursor: "pointer",
+          }}
+        >
+          Todos
+        </button>
       </div>
-
+  
       <div className="chat-list">
         {filteredChats.map((c) => (
           <div
