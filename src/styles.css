@@ -272,4 +272,28 @@
 .chat-item.active {
   background-color: #d8e9ff;
 }
+.chat-item {
+  background: transparent;
+  transition: background-color 0.15s ease;
+}
+
+/* Chat seleccionado (activo) */
+.chat-item.active {
+  background: #e9f0ff; /* un poco mas oscuro/azulado */
+}
+
+/* Chat marcado (etiquetado) */
+.chat-item.marked {
+  background: #fff7e0; /* color llamativo para marcado */
+}
+
+/* Si esta marcado y activo a la vez, que se note el activo */
+.chat-item.marked.active {
+  background: #ffe6a6; /* mezcla un poco mas intensa para el activo marcado */
+}
+
+/* Opcional: hover */
+.chat-item:hover {
+  background: rgba(0,0,0,0.04);
+}
 
