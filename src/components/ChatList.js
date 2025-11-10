@@ -89,7 +89,6 @@ export default function ChatList({ chats, selected, onSelect }) {
                 borderLeft: isMarked
                   ? "5px solid orange"
                   : "5px solid transparent",
-                backgroundColor: isMarked ? "#fff7e0" : "transparent",
               }}
             >
               <div style={{ flexGrow: 1 }}>
