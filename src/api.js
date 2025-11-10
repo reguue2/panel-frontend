@@ -26,3 +26,5 @@ export const sendTemplate = (to, name, language="es", components=[]) =>
   }).then(r => r.data);
 
 export const listTemplates = () => api.get("/api/templates").then(r => r.data);
+
+export default api;
