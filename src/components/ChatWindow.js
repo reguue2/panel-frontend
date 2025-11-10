@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import api from "../api";
+import api from "../api.js";
 
 export default function ChatWindow({ phone, messages, meLabel = "Yo", themLabel = "Ellos" }) {
   useEffect(() => {
