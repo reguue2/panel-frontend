@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import "./ChatList.css";
 
 export default function ChatList({ chats, selected, onSelect }) {
   const [filter, setFilter] = useState("all");
