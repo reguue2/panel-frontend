@@ -214,7 +214,27 @@ export default function App() {
         {activePage === "chats" && (
           <div className="chats-layout">
             <div className="chats-column">
-              <ChatList chats={chats} selected={selected} onSelect={setSelected} />
+              <ChatList
+                chats={chats}
+                selected={selected}
+                onSelect={async (phone) => {
+                  setSelected(phone);
+            
+                  setChats((prev) =>
+                    prev.map((c) =>
+                      c.phone === phone ? { ...c, has_unread: false } : c
+                    )
+                  );
+            
+                  try {
+                    await axios.patch(`${API_URL}/api/chats/${phone}/read`);
+                  } catch (err) {
+                    console.error("Error marcando leido:", err);
+                  }
+            
+                  await refreshMessages(phone);
+                }}
+              />
             </div>
 
             <div className="chat-window-container">
