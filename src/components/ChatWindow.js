@@ -1,14 +1,21 @@
 import React, { useEffect, useRef } from "react";
 import api from "../api.js";
 
-export default function ChatWindow({ phone, messages, meLabel = "Yo", themLabel = "Ellos" }) {
+export default function ChatWindow({
+  phone,
+  messages,
+  meLabel = "Yo",
+  themLabel = "Ellos",
+}) {
   const chatRef = useRef(null);
 
+  // Marcar mensajes como leídos al abrir el chat
   useEffect(() => {
     if (!phone) return;
     api.patch(`/chats/${phone}/read`).catch(() => {});
   }, [phone]);
 
+  // Scroll automático al fondo al cargar mensajes o cambiar de chat
   useEffect(() => {
     const container = chatRef.current;
     if (container) {
@@ -26,7 +33,7 @@ export default function ChatWindow({ phone, messages, meLabel = "Yo", themLabel 
         height: "100%",
         overflowY: "auto",
         display: "flex",
-        flexDirection: "column"
+        flexDirection: "column",
       }}
     >
       {messages && messages.length > 0 ? (
@@ -36,27 +43,10 @@ export default function ChatWindow({ phone, messages, meLabel = "Yo", themLabel 
             className={`msg-row ${m.direction === "out" ? "me" : "them"}`}
           >
             <div className="bubble">
-              {m.type === "audio" && m.media_url ? (
-                <audio
-                  controls
-                  preload="metadata"
-                  style={{
-                    width: "100%",
-                    outline: "none",
-                    backgroundColor: "#f9f9f9",
-                    borderRadius: "8px",
-                  }}
-                  src={
-                    m.media_url.startsWith("http")
-                      ? m.media_url
-                      : `${process.env.REACT_APP_API_URL}${m.media_url}`
-                  }
-                  onError={(e) => {
-                    console.warn("Error cargando audio:", m.media_url, e);
-                    e.target.outerHTML =
-                      '<div style="color:#999">Audio no disponible</div>';
-                  }}
-                />
+              {m.type === "audio" ? (
+                <div style={{ color: "#555", fontStyle: "italic" }}>
+                  Audio recibido
+                </div>
               ) : m.type === "image" && m.media_url ? (
                 <img
                   src={
@@ -87,6 +77,7 @@ export default function ChatWindow({ phone, messages, meLabel = "Yo", themLabel 
                       : "")}
                 </div>
               )}
+
               <div className="time">
                 {new Date(m.timestamp * 1000).toLocaleString()}
               </div>
