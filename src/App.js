@@ -240,7 +240,7 @@ export default function App() {
             <div className="chat-window-container">
               {selected ? (
                 <>
-                  <ChatWindow messages={messages} meLabel="Yo" themLabel="Ellos" />
+                  <ChatWindow phone={selected} messages={messages} meLabel="Yo" themLabel="Ellos" />
                   {/* Aquí arreglamos el botón dentro del chat */}
                   <MessageInput
                     onSend={handleSendText}
