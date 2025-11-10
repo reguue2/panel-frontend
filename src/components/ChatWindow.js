@@ -1,4 +1,12 @@
 import React from "react";
+import { useEffect } from "react";
+import api from "../api";
+
+export default function ChatWindow({ phone, messages }) {
+  useEffect(() => {
+    if (!phone) return;
+    api.patch(`/chats/${phone}/read`).catch(() => {});
+  }, [phone]);
 
 export default function ChatWindow({ messages, meLabel = "Yo", themLabel = "Ellos" }) {
   return (
