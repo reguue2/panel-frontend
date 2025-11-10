@@ -2,13 +2,19 @@ import React, { useEffect } from "react";
 import api from "../api.js";
 
 export default function ChatWindow({ phone, messages, meLabel = "Yo", themLabel = "Ellos" }) {
+  const chatRef = useRef(null);
   useEffect(() => {
     if (!phone) return;
     api.patch(`/chats/${phone}/read`).catch(() => {});
   }, [phone]);
+  useEffect(() => {
+    if (chatRef.current) {
+      chatRef.current.scrollTop = chatRef.current.scrollHeight;
+    }
+  }, [messages, phone]);
 
   return (
-    <div className="chat-window">
+    <div className="chat-window" ref={chatRef}>
       {messages.map((m) => (
         <div
           key={m.id}
