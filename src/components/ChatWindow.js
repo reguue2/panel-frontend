@@ -1,85 +1,102 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import api from "../api.js";
 
 export default function ChatWindow({ phone, messages, meLabel = "Yo", themLabel = "Ellos" }) {
   const chatRef = useRef(null);
+
   useEffect(() => {
     if (!phone) return;
     api.patch(`/chats/${phone}/read`).catch(() => {});
   }, [phone]);
+
   useEffect(() => {
-    if (chatRef.current) {
-      chatRef.current.scrollTop = chatRef.current.scrollHeight;
+    const container = chatRef.current;
+    if (container) {
+      requestAnimationFrame(() => {
+        container.scrollTop = container.scrollHeight;
+      });
     }
   }, [messages, phone]);
 
   return (
-    <div className="chat-window" ref={chatRef}>
-      {messages.map((m) => (
-        <div
-          key={m.id}
-          className={`msg-row ${m.direction === "out" ? "me" : "them"}`}
-        >
-          <div className="bubble">
-            {/* --- AUDIO --- */}
-            {m.type === "audio" && m.media_url ? (
-              <audio
-                controls
-                preload="metadata"
-                style={{
-                  width: "100%",
-                  outline: "none",
-                  backgroundColor: "#f9f9f9",
-                  borderRadius: "8px",
-                }}
-                src={
-                  m.media_url.startsWith("http")
-                    ? m.media_url
-                    : `${process.env.REACT_APP_API_URL}${m.media_url}`
-                }
-                onError={(e) => {
-                  console.warn("Error cargando audio:", m.media_url, e);
-                  e.target.outerHTML =
-                    '<div style="color:#999">Audio no disponible</div>';
-                }}
-              />
-            ) : m.type === "image" && m.media_url ? (
-              /* --- IMAGEN --- */
-              <img
-                src={
-                  m.media_url.startsWith("http")
-                    ? m.media_url
-                    : `${process.env.REACT_APP_API_URL}${m.media_url}`
-                }
-                alt="imagen"
-                style={{ maxWidth: "60%", borderRadius: "8px" }}
-              />
-            ) : m.type === "document" && m.media_url ? (
-              /* --- DOCUMENTO --- */
-              <a
-                href={
-                  m.media_url.startsWith("http")
-                    ? m.media_url
-                    : `${process.env.REACT_APP_API_URL}${m.media_url}`
-                }
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Descargar documento
-              </a>
-            ) : (
-              /* --- TEXTO o PLANTILLA --- */
-              <div className="text">
-                {m.text || (m.template_name ? `Plantilla: ${m.template_name}` : "")}
+    <div
+      className="chat-window"
+      ref={chatRef}
+      style={{
+        height: "100%",
+        overflowY: "auto",
+        display: "flex",
+        flexDirection: "column",
+        backgroundColor: "#fff",
+      }}
+    >
+      {messages && messages.length > 0 ? (
+        messages.map((m) => (
+          <div
+            key={m.id}
+            className={`msg-row ${m.direction === "out" ? "me" : "them"}`}
+          >
+            <div className="bubble">
+              {m.type === "audio" && m.media_url ? (
+                <audio
+                  controls
+                  preload="metadata"
+                  style={{
+                    width: "100%",
+                    outline: "none",
+                    backgroundColor: "#f9f9f9",
+                    borderRadius: "8px",
+                  }}
+                  src={
+                    m.media_url.startsWith("http")
+                      ? m.media_url
+                      : `${process.env.REACT_APP_API_URL}${m.media_url}`
+                  }
+                  onError={(e) => {
+                    console.warn("Error cargando audio:", m.media_url, e);
+                    e.target.outerHTML =
+                      '<div style="color:#999">Audio no disponible</div>';
+                  }}
+                />
+              ) : m.type === "image" && m.media_url ? (
+                <img
+                  src={
+                    m.media_url.startsWith("http")
+                      ? m.media_url
+                      : `${process.env.REACT_APP_API_URL}${m.media_url}`
+                  }
+                  alt="imagen"
+                  style={{ maxWidth: "60%", borderRadius: "8px" }}
+                />
+              ) : m.type === "document" && m.media_url ? (
+                <a
+                  href={
+                    m.media_url.startsWith("http")
+                      ? m.media_url
+                      : `${process.env.REACT_APP_API_URL}${m.media_url}`
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Descargar documento
+                </a>
+              ) : (
+                <div className="text">
+                  {m.text ||
+                    (m.template_name
+                      ? `Plantilla: ${m.template_name}`
+                      : "")}
+                </div>
+              )}
+              <div className="time">
+                {new Date(m.timestamp * 1000).toLocaleString()}
               </div>
-            )}
-
-            <div className="time">
-              {new Date(m.timestamp * 1000).toLocaleString()}
             </div>
           </div>
-        </div>
-      ))}
+        ))
+      ) : (
+        <div style={{ color: "#999", margin: "auto" }}>No hay mensajes</div>
+      )}
     </div>
   );
 }
