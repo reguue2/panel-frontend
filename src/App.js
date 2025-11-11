@@ -18,6 +18,8 @@ export default function App() {
   const [templates, setTemplates] = useState([]);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
   const [pendingTplPhone, setPendingTplPhone] = useState(null);
+  const [mobileShowChats, setMobileShowChats] = useState(false);
+  const [mobileShowMenu, setMobileShowMenu] = useState(false);
 
   const socket = useMemo(() => io(API_URL, { autoConnect: false }), []);
 
@@ -211,6 +213,11 @@ export default function App() {
 
       {/* Contenido principal */}
       <main className="main">
+        <div className="mobile-topbar">
+          <button className="topbar-btn" onClick={() => setMobileShowMenu(true)}>Menu</button>
+          <div className="topbar-title">{selected || "Prospecting"}</div>
+          <button className="topbar-btn" onClick={() => setMobileShowChats(true)}>Chats</button>
+        </div>
         {activePage === "chats" && (
           <div className="chats-layout">
             <div className="chats-column">
@@ -345,6 +352,57 @@ export default function App() {
             ) : (
               <p>No hay plantillas cargadas</p>
             )}
+          </div>
+        )}
+        {/* Panel lateral móvil: lista de chats */}
+        {mobileShowChats && (
+          <div className="overlay" onClick={() => setMobileShowChats(false)}>
+            <div className="drawer" onClick={(e) => e.stopPropagation()}>
+              <div className="drawer-header">
+                <strong>Chats</strong>
+                <button className="close-btn" onClick={() => setMobileShowChats(false)}>Cerrar</button>
+              </div>
+              <div className="drawer-body">
+                <ChatList
+                  chats={chats}
+                  selected={selected}
+                  onSelect={async (phone) => {
+                    setSelected(phone);
+                    setMobileShowChats(false);
+                    setChats(prev => prev.map(c => (c.phone === phone ? { ...c, has_unread: false } : c)));
+                    await refreshMessages(phone);
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Panel lateral móvil: menú */}
+        {mobileShowMenu && (
+          <div className="overlay" onClick={() => setMobileShowMenu(false)}>
+            <div className="drawer drawer-right" onClick={(e) => e.stopPropagation()}>
+              <div className="drawer-header">
+                <strong>Panel</strong>
+                <button className="close-btn" onClick={() => setMobileShowMenu(false)}>Cerrar</button>
+              </div>
+              <div className="drawer-body">
+                <button
+                  className={`menu-btn ${activePage === "chats" ? "active" : ""}`}
+                  onClick={() => { setActivePage("chats"); setMobileShowMenu(false); }}
+                >
+                  Chats
+                </button>
+                <button
+                  className={`menu-btn ${activePage === "plantilla" ? "active" : ""}`}
+                  onClick={() => { setActivePage("plantilla"); setMobileShowMenu(false); }}
+                >
+                  Enviar plantilla
+                </button>
+                <hr />
+                <button className="logout-btn" onClick={handleLogout}>Cerrar sesión</button>
+              </div>
+            </div>
           </div>
         )}
       </main>
