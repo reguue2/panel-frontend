@@ -15,7 +15,7 @@ export default function MessageInput({ onSend, onOpenTemplates }) {
     <div className="message-input-container">
       <input
         type="text"
-        className="message-input-field"
+        className="message-input"
         placeholder="Escribe un mensaje..."
         value={text}
         onChange={(e) => setText(e.target.value)}
