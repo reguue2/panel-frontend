@@ -1,8 +1,9 @@
 import React, { useState } from "react";
+import api from "../api.js";
 
 export default function ChatList({ chats, selected, onSelect }) {
   const [filter, setFilter] = useState("all");
-  const [markedChats, setMarkedChats] = useState(new Set());
+  const [loadingPin, setLoadingPin] = useState(null);
 
   const filteredChats =
     filter === "all"
@@ -11,16 +12,16 @@ export default function ChatList({ chats, selected, onSelect }) {
           filter === "unread" ? c.has_unread : !c.has_unread
         );
 
-  const toggleMarked = (phone) => {
-    setMarkedChats((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(phone)) {
-        newSet.delete(phone);
-      } else {
-        newSet.add(phone);
-      }
-      return newSet;
-    });
+  // Cambiar el estado "pinned" en BD y refrescar visualmente
+  const togglePin = async (phone, currentState) => {
+    try {
+      setLoadingPin(phone);
+      await api.patch(`/chats/${phone}/pin`, { pinned: !currentState });
+    } catch (err) {
+      console.error("Error al fijar chat:", err);
+    } finally {
+      setLoadingPin(null);
+    }
   };
 
   return (
@@ -73,20 +74,21 @@ export default function ChatList({ chats, selected, onSelect }) {
       <div className="chat-list">
         {filteredChats.map((c) => {
           const isActive = selected === c.phone;
-          const isMarked = markedChats.has(c.phone);
+          const isPinned = c.pinned;
+
           return (
             <div
               key={c.phone}
               className={`chat-item ${isActive ? "active" : ""} ${
                 c.has_unread ? "unread" : ""
-              }`}
+              } ${isPinned ? "marked" : ""}`}
               onClick={() => onSelect(c.phone)}
               style={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
                 paddingRight: "8px",
-                borderLeft: isMarked
+                borderLeft: isPinned
                   ? "5px solid orange"
                   : "5px solid transparent",
               }}
@@ -101,25 +103,26 @@ export default function ChatList({ chats, selected, onSelect }) {
                 </div>
               </div>
 
-              {/* BOTÓN DE MARCAR */}
+              {/* BOTÓN DE FIJAR CHAT */}
               <button
                 onClick={(e) => {
-                  e.stopPropagation(); // evita abrir el chat al hacer click
-                  toggleMarked(c.phone);
+                  e.stopPropagation();
+                  togglePin(c.phone, isPinned);
                 }}
                 style={{
                   marginLeft: "5px",
                   border: "none",
-                  background: isMarked ? "orange" : "#ccc",
+                  background: isPinned ? "orange" : "#ccc",
                   color: "white",
                   borderRadius: "6px",
                   width: "24px",
                   height: "24px",
-                  cursor: "pointer",
+                  cursor: loadingPin === c.phone ? "wait" : "pointer",
+                  opacity: loadingPin === c.phone ? 0.6 : 1,
                 }}
-                title={isMarked ? "Desmarcar chat" : "Marcar chat"}
+                title={isPinned ? "Desfijar chat" : "Fijar chat"}
               >
-                {isMarked ? "✓" : "★"}
+                {isPinned ? "✓" : "★"}
               </button>
             </div>
           );
